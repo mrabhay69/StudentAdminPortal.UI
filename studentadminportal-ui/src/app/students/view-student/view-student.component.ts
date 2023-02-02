@@ -33,6 +33,9 @@ export class ViewStudentComponent implements OnInit {
     }
   };
 
+  isNewStudent = false;
+  header = '';
+
   genderList: Gender[] = [];
 
   constructor(private readonly studentService: StudentsService,
@@ -41,29 +44,39 @@ export class ViewStudentComponent implements OnInit {
     private snackbar: MatSnackBar,
     private router: Router) { }
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe(
-      (params) => {
-        this.studentId = params.get('id');
+    ngOnInit(): void {
+      this.route.paramMap.subscribe(
+        (params) => {
+          this.studentId = params.get('id');
 
-        if (this.studentId) {
-          this.studentService.getStudent(this.studentId)
+          if (this.studentId) {
+            if (this.studentId.toLowerCase() === 'Add'.toLowerCase()) {
+              // -> new Student Functionality
+              this.isNewStudent = true;
+              this.header = 'Add New Student';
+            } else {
+              // -> Existing Student Functionality
+              this.isNewStudent = false;
+              this.header = 'Edit Student';
+
+              this.studentService.getStudent(this.studentId)
+                .subscribe(
+                  (successResponse) => {
+                    this.student = successResponse;
+                  }
+                );
+            }
+
+            this.genderService.getGenderList()
               .subscribe(
                 (successResponse) => {
-                  this.student = successResponse;
+                  this.genderList = successResponse;
                 }
-          );
-
-          this.genderService.getGenderList()
-            .subscribe(
-              (successResponse) => {
-                this.genderList = successResponse;
-              }
-            );
+              );
+          }
         }
-      }
-    );
-  }
+      );
+    }
 
   onUpdate(): void {
       this.studentService.updateStudent(this.student.id, this.student)
@@ -97,6 +110,27 @@ export class ViewStudentComponent implements OnInit {
           // Log
         }
       );
+  }
+
+  onAdd(): void {
+      // Submit form date to api
+      this.studentService.addStudent(this.student)
+        .subscribe(
+          (successResponse) => {
+            this.snackbar.open('Student added successfully', undefined, {
+              duration: 2000
+            });
+
+            setTimeout(() => {
+              this.router.navigateByUrl(`students/${successResponse.id}`);
+            }, 2000);
+
+          },
+          (errorResponse) => {
+            // Log
+            console.log(errorResponse);
+          }
+        );
   }
 
 }
