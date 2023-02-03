@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Gender } from 'src/app/models/ui-models/gender.model';
@@ -38,6 +39,9 @@ export class ViewStudentComponent implements OnInit {
   displayProfileImageUrl = '';
 
   genderList: Gender[] = [];
+
+
+  @ViewChild('studentDetailsForm') studentDetailsForm?: NgForm;
 
   constructor(private readonly studentService: StudentsService,
     private readonly route: ActivatedRoute,
@@ -84,21 +88,23 @@ export class ViewStudentComponent implements OnInit {
       );
     }
 
-  onUpdate(): void {
-      this.studentService.updateStudent(this.student.id, this.student)
-        .subscribe(
-          (successResponse) => {
-            // Show a notification
-            this.snackbar.open('Student updated successfully', undefined, {
-              duration: 2000
-            });
-          },
-          (errorResponse) => {
-            // Log it
-            console.log(errorResponse);
-          }
-        );
-  }
+    onUpdate(): void {
+      if (this.studentDetailsForm?.form.valid) {
+        this.studentService.updateStudent(this.student.id, this.student)
+          .subscribe(
+            (successResponse) => {
+              // Show a notification
+              this.snackbar.open('Student updated successfully', undefined, {
+                duration: 2000
+              });
+            },
+            (errorResponse) => {
+              // Log it
+              console.log(errorResponse);
+            }
+          );
+      }
+    }
 
   onDelete(): void {
     this.studentService.deleteStudent(this.student.id)
@@ -119,6 +125,7 @@ export class ViewStudentComponent implements OnInit {
   }
 
   onAdd(): void {
+    if (this.studentDetailsForm?.form.valid) {
       // Submit form date to api
       this.studentService.addStudent(this.student)
         .subscribe(
@@ -137,7 +144,9 @@ export class ViewStudentComponent implements OnInit {
             console.log(errorResponse);
           }
         );
+    }
   }
+
 
   uploadImage(event: any): void {
     if (this.studentId) {
